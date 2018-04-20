@@ -15,8 +15,6 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.MultiResourceItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -24,6 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.example.batch.BatchPoC.entities.Person;
 import com.example.batch.BatchPoC.listeners.JobCompletionNotificationListener;
@@ -31,6 +30,7 @@ import com.example.batch.BatchPoC.processors.PersonItemProcessor;
 
 @SpringBootApplication
 @EnableBatchProcessing
+@EnableScheduling
 public class BatchPoCApplication {
 
 	@Value("classpath*:sample*.csv")
@@ -42,6 +42,7 @@ public class BatchPoCApplication {
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
 
+	
 	@Bean
 	public MultiResourceItemReader<Person> multiResourceItemReader() {
 		MultiResourceItemReader<Person> resourceItemReader = new MultiResourceItemReader<Person>();
@@ -82,7 +83,8 @@ public class BatchPoCApplication {
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
 				.flow(step1)
-				.end().build();
+				.end()
+				.build();
 	}
 
 	@Bean
