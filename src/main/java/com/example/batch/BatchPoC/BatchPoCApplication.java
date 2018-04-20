@@ -86,6 +86,16 @@ public class BatchPoCApplication {
 				.end()
 				.build();
 	}
+	
+	@Bean
+	public Job importUserJob2(JobCompletionNotificationListener listener, Step step1) {
+		return jobBuilderFactory.get("importUserJob2")
+				.incrementer(new RunIdIncrementer())
+				.listener(listener)
+				.flow(step1)
+				.end()
+				.build();
+	}
 
 	@Bean
 	public Step step1(JdbcBatchItemWriter<Person> writer) {
