@@ -97,6 +97,13 @@ public class BatchPoCApplication {
 				.build();
 	}
 
+	/**
+	 * chunk is the size of elements that will be read before the batch starts a new db transaction
+	 * so, if chunk(10), then the batch will read 10 elements and then starts a transaction to 
+	 * (in this case) insert the elements
+	 * @param writer
+	 * @return
+	 */
 	@Bean
 	public Step step1(JdbcBatchItemWriter<Person> writer) {
 		return stepBuilderFactory.get("step1")

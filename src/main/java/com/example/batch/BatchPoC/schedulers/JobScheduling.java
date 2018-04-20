@@ -20,6 +20,10 @@ public class JobScheduling {
 	private Job job;
 	
 	@Autowired
+	@Qualifier("importUserJob2")
+	private Job job2;
+	
+	@Autowired
 	private JobLauncher jobLauncher;
 	
 	/**
@@ -37,5 +41,6 @@ public class JobScheduling {
     public void executeJob() throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
         
     	jobLauncher.run(job, new JobParameters());
+    	jobLauncher.run(job2, new JobParameters());
     }
 }
