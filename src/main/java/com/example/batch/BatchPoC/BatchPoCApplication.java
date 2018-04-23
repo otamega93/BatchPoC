@@ -30,12 +30,6 @@ import com.example.batch.BatchPoC.processors.PersonItemProcessor;
 @EnableScheduling
 public class BatchPoCApplication {
 
-	@Value("classpath*:sample-data*.csv")
-	private Resource[] resources;
-	
-	@Value("classpath*:sample-jpa*.csv")
-	private Resource[] resources2;
-
 	@Autowired
 	public JobBuilderFactory jobBuilderFactory;
 
