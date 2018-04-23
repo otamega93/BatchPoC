@@ -9,6 +9,8 @@ The jpa-transaction branch is the same as the previous ones but uses a jpa write
 
 The jdbc_reader-jpa_writer branch is like the jpa-transaction but this one reads the data from DB, process it and insert it using the jpa writer.
 
+The command-line branch is just the jdbc_reader-jpa_writer using CommandLineRunner to pass arguments nad, based on those arguments, we decide which job execute manually from the JobScheduler.
+
 # Note
 
 @EnableBatchProcessing, by default, set a transaction manager into the jobRepository. So, by default, our jobs are transactional.

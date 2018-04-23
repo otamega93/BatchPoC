@@ -1,6 +1,5 @@
 package com.example.batch.BatchPoC;
 
-
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -13,29 +12,32 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.example.batch.BatchPoC.entities.Person;
 import com.example.batch.BatchPoC.listeners.JobCompletionNotificationListener;
 import com.example.batch.BatchPoC.processors.PersonItemProcessor;
+import com.example.batch.BatchPoC.schedulers.JobScheduling;
 
 @SpringBootApplication
 @EnableBatchProcessing
 @EnableScheduling
-public class BatchPoCApplication {
+public class BatchPoCApplication implements CommandLineRunner {
 
 	@Autowired
-	public JobBuilderFactory jobBuilderFactory;
+	private JobBuilderFactory jobBuilderFactory;
 
 	@Autowired
-	public StepBuilderFactory stepBuilderFactory;
+	private StepBuilderFactory stepBuilderFactory;
 
+	@Autowired
+	private JobScheduling jobScheduling;
+	
 	
     @Bean
     JdbcCursorItemReader<Person> reader(DataSource dataSource) {
@@ -110,6 +112,16 @@ public class BatchPoCApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BatchPoCApplication.class, args);
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		
+		if (null != args[0]) {
+			
+			System.out.println();
+			jobScheduling.executeJob(args[0]);
+		}
 	}
 
 }

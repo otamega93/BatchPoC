@@ -43,13 +43,19 @@ public class JobScheduling {
 	 * @throws JobInstanceAlreadyCompleteException
 	 * @throws JobParametersInvalidException
 	 */
-    @Scheduled(fixedRate=5000)
-    public void executeJob() throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
-        
-    	personRepository.save(new Person(null, "August", "Doe"));
-    	personRepository.save(new Person(null, "Dio", "Doe"));
+    //@Scheduled(fixedRate=5000)
+    public void executeJob(String param) throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
     	
-    	jobLauncher.run(job, new JobParameters());
-    	jobLauncher.run(job2, new JobParameters());
+    	if (null != param && param.equalsIgnoreCase("1")) {
+    		
+    		personRepository.save(new Person(null, "August", "Doe"));
+    		jobLauncher.run(job, new JobParameters());
+    	}
+    	
+    	else {
+    	
+    		personRepository.save(new Person(null, "Dio", "Doe"));
+    		jobLauncher.run(job2, new JobParameters());
+    	}
     }
 }
