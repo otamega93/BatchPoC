@@ -1,5 +1,6 @@
 package com.example.batch.BatchPoC;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.springframework.batch.core.Job;
@@ -8,9 +9,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.MultiResourceItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
@@ -20,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -33,8 +31,11 @@ import com.example.batch.BatchPoC.processors.PersonItemProcessor;
 @EnableScheduling
 public class BatchPoCApplication {
 
-	@Value("classpath*:sample*.csv")
+	@Value("classpath*:sample-data*.csv")
 	private Resource[] resources;
+	
+	@Value("classpath*:sample-jpa*.csv")
+	private Resource[] resources2;
 
 	@Autowired
 	public JobBuilderFactory jobBuilderFactory;
@@ -52,9 +53,16 @@ public class BatchPoCApplication {
 	}
 
 	@Bean
+	public MultiResourceItemReader<Person> multiResourceItemReader2() {
+		MultiResourceItemReader<Person> resourceItemReader = new MultiResourceItemReader<Person>();
+		resourceItemReader.setResources(resources2);
+		resourceItemReader.setDelegate(reader());
+		return resourceItemReader;
+	}
+	
+	@Bean
 	public FlatFileItemReader<Person> reader() {
 		return new FlatFileItemReaderBuilder<Person>().name("personItemReader")
-				//.resource(new ClassPathResource("sample-data.csv"))
 				.delimited()
 				.names(new String[] { "name", "lastName" })
 				.fieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
@@ -69,12 +77,13 @@ public class BatchPoCApplication {
 	}
 
 	@Bean
-	public JdbcBatchItemWriter<Person> writer(DataSource dataSource) {
-		return new JdbcBatchItemWriterBuilder<Person>()
-				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-				.sql("INSERT INTO person (name, lastName) VALUES (:name, :lastName)")
-				.dataSource(dataSource)
-				.build();
+	public JpaItemWriter<Person> writer(DataSource dataSource, EntityManagerFactory emf) throws Exception {
+
+		JpaItemWriter<Person> jpa = new JpaItemWriter<Person>();
+		jpa.setEntityManagerFactory(emf);
+		jpa.afterPropertiesSet();
+
+		return jpa;
 	}
 
 	@Bean
@@ -88,11 +97,11 @@ public class BatchPoCApplication {
 	}
 	
 	@Bean
-	public Job importUserJob2(JobCompletionNotificationListener listener, Step step1) {
+	public Job importUserJob2(JobCompletionNotificationListener listener, Step step2) {
 		return jobBuilderFactory.get("importUserJob2")
 				.incrementer(new RunIdIncrementer())
 				.listener(listener)
-				.flow(step1)
+				.flow(step2)
 				.end()
 				.build();
 	}
@@ -105,11 +114,22 @@ public class BatchPoCApplication {
 	 * @return
 	 */
 	@Bean
-	public Step step1(JdbcBatchItemWriter<Person> writer) {
+	public Step step1(JpaItemWriter<Person> writer) {
 		return stepBuilderFactory.get("step1")
 				.<Person, Person>chunk(10)
 				//.reader(reader())
 				.reader(multiResourceItemReader()) // To load multiple resources
+				.processor(processor())
+				.writer(writer)
+				.build();
+	}
+	
+	@Bean
+	public Step step2(JpaItemWriter<Person> writer) {
+		return stepBuilderFactory.get("step2")
+				.<Person, Person>chunk(10)
+				//.reader(reader())
+				.reader(multiResourceItemReader2()) // To load multiple resources
 				.processor(processor())
 				.writer(writer)
 				.build();
