@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.example.batch.BatchPoC.entities.Person;
+import com.example.batch.BatchPoC.repositories.PersonRepository;
+
 @Component
 public class JobScheduling {
 
@@ -25,6 +28,9 @@ public class JobScheduling {
 	
 	@Autowired
 	private JobLauncher jobLauncher;
+	
+	@Autowired
+	private PersonRepository personRepository;
 	
 	/**
 	 * When running every job separately (like we're doing here) you need to specify which one you want to run/inject.
@@ -40,6 +46,9 @@ public class JobScheduling {
     @Scheduled(fixedRate=5000)
     public void executeJob() throws JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException, JobParametersInvalidException {
         
+    	personRepository.save(new Person(null, "August", "Doe"));
+    	personRepository.save(new Person(null, "Dio", "Doe"));
+    	
     	jobLauncher.run(job, new JobParameters());
     	jobLauncher.run(job2, new JobParameters());
     }

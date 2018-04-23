@@ -18,8 +18,9 @@ public class Person {
 	@Column(name = "lastname")
 	private String lastName;
 	
-	public Person(String name, String lastName) {
+	public Person(Long id, String name, String lastName) {
 		super();
+		this.id = id;
 		this.name = name;
 		this.lastName = lastName;
 	}

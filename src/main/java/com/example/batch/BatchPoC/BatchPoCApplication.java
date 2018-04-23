@@ -1,5 +1,6 @@
 package com.example.batch.BatchPoC;
 
+
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -9,17 +10,15 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JpaItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.MultiResourceItemReader;
-import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.example.batch.BatchPoC.entities.Person;
@@ -44,32 +43,16 @@ public class BatchPoCApplication {
 	public StepBuilderFactory stepBuilderFactory;
 
 	
-	@Bean
-	public MultiResourceItemReader<Person> multiResourceItemReader() {
-		MultiResourceItemReader<Person> resourceItemReader = new MultiResourceItemReader<Person>();
-		resourceItemReader.setResources(resources);
-		resourceItemReader.setDelegate(reader());
-		return resourceItemReader;
-	}
+    @Bean
+    JdbcCursorItemReader<Person> reader(DataSource dataSource) {
+        JdbcCursorItemReader<Person> reader = new JdbcCursorItemReader<>();
+        
+        reader.setDataSource(dataSource);
+        reader.setSql("SELECT ID, NAME, LASTNAME FROM PERSON");
+        reader.setRowMapper(new BeanPropertyRowMapper<>(Person.class));
 
-	@Bean
-	public MultiResourceItemReader<Person> multiResourceItemReader2() {
-		MultiResourceItemReader<Person> resourceItemReader = new MultiResourceItemReader<Person>();
-		resourceItemReader.setResources(resources2);
-		resourceItemReader.setDelegate(reader());
-		return resourceItemReader;
-	}
-	
-	@Bean
-	public FlatFileItemReader<Person> reader() {
-		return new FlatFileItemReaderBuilder<Person>().name("personItemReader")
-				.delimited()
-				.names(new String[] { "name", "lastName" })
-				.fieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
-						setTargetType(Person.class);
-				}})
-				.build();
-	}
+        return reader;
+    }
 
 	@Bean
 	public PersonItemProcessor processor() {
@@ -112,20 +95,20 @@ public class BatchPoCApplication {
 	 * @return
 	 */
 	@Bean
-	public Step step1(JpaItemWriter<Person> writer) {
+	public Step step1(JpaItemWriter<Person> writer, EntityManagerFactory emf, DataSource dataSource) {
 		return stepBuilderFactory.get("step1")
 				.<Person, Person>chunk(10)
-				.reader(multiResourceItemReader()) // To load multiple resources
+				.reader(reader(dataSource))
 				.processor(processor())
 				.writer(writer)
 				.build();
 	}
 	
 	@Bean
-	public Step step2(JpaItemWriter<Person> writer) {
+	public Step step2(JpaItemWriter<Person> writer, EntityManagerFactory emf, DataSource dataSource) {
 		return stepBuilderFactory.get("step2")
 				.<Person, Person>chunk(10)
-				.reader(multiResourceItemReader2()) // To load multiple resources
+				.reader(reader(dataSource))
 				.processor(processor())
 				.writer(writer)
 				.build();
