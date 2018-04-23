@@ -78,11 +78,9 @@ public class BatchPoCApplication {
 
 	@Bean
 	public JpaItemWriter<Person> writer(DataSource dataSource, EntityManagerFactory emf) throws Exception {
-
 		JpaItemWriter<Person> jpa = new JpaItemWriter<Person>();
 		jpa.setEntityManagerFactory(emf);
 		jpa.afterPropertiesSet();
-
 		return jpa;
 	}
 
@@ -117,7 +115,6 @@ public class BatchPoCApplication {
 	public Step step1(JpaItemWriter<Person> writer) {
 		return stepBuilderFactory.get("step1")
 				.<Person, Person>chunk(10)
-				//.reader(reader())
 				.reader(multiResourceItemReader()) // To load multiple resources
 				.processor(processor())
 				.writer(writer)
@@ -128,7 +125,6 @@ public class BatchPoCApplication {
 	public Step step2(JpaItemWriter<Person> writer) {
 		return stepBuilderFactory.get("step2")
 				.<Person, Person>chunk(10)
-				//.reader(reader())
 				.reader(multiResourceItemReader2()) // To load multiple resources
 				.processor(processor())
 				.writer(writer)
